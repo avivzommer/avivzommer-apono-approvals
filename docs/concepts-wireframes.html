@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Concept Wireframes</title>
+<style>
+  :root { --ink:#1e1e1e; --mute:#6b6b6b; --line:#d4d4d4; --fill:#f2f2f2; --risk:#d6453d; --riskbg:#fde8e6; --warn:#b86114; --warnbg:#fff1e0; --ok:#1f804d; --okbg:#e3f5ea; --acc:#3866bf; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#fff; color:var(--ink); font:13px/1.35 Inter, -apple-system, system-ui, sans-serif; }
+  .c { width:900px; height:480px; padding:22px 26px; display:none; flex-direction:column; gap:12px; }
+  .c.on { display:flex; }
+  .hd { display:flex; align-items:baseline; gap:12px; }
+  .hd b { font-size:22px; }
+  .hd span { color:var(--mute); font-size:14px; }
+  .thesis { font-size:14px; background:#1e1e1e; color:#fff; padding:8px 12px; border-radius:6px; }
+  .frame { flex:1; border:2px solid var(--ink); border-radius:10px; padding:12px; display:flex; gap:12px; overflow:hidden; background:#fff; }
+  .col { display:flex; flex-direction:column; gap:8px; }
+  .box { border:1.5px solid var(--line); border-radius:8px; padding:8px 10px; background:#fff; }
+  .g { background:var(--fill); }
+  .tag { display:inline-block; font-size:11px; font-weight:600; padding:1px 7px; border-radius:99px; margin-right:4px; }
+  .r { color:var(--risk); background:var(--riskbg); } .w { color:var(--warn); background:var(--warnbg); } .k { color:var(--ok); background:var(--okbg); }
+  .btn { display:inline-block; border:1.5px solid var(--ink); border-radius:6px; padding:4px 10px; font-weight:600; font-size:12px; }
+  .btn.p { background:var(--ink); color:#fff; } .btn.d { border-color:var(--risk); color:var(--risk); }
+  .row { display:flex; align-items:center; gap:8px; padding:6px 8px; border-bottom:1px solid var(--line); }
+  .row:last-child { border-bottom:0; }
+  .ln { height:8px; background:var(--line); border-radius:4px; }
+  .mute { color:var(--mute); }
+  .lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--mute); }
+  .sp { flex:1; }
+  .kbd { font:600 11px ui-monospace, monospace; border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; padding:0 5px; }
+  .note { font-size:12px; color:var(--mute); }
+  .lane { border:2px dashed var(--line); border-radius:8px; padding:8px; }
+  .lane.hot { border-color:var(--risk); background:#fffafa; }
+</style>
+</head>
+<body>
+
+<!-- A · Risk-lane inbox -->
+<section class="c" id="A">
+  <div class="hd"><b>A · Risk-lane inbox</b><span>queue-level triage · batch the routine, spotlight the risky</span></div>
+  <div class="thesis">"Most of your queue is routine. Clear it in one reviewed batch, and give your full attention to the 2 that matter."</div>
+  <div class="frame">
+    <div class="col" style="width:180px">
+      <div class="box g"><div class="lbl">Email digest</div><b>12 requests · 2 need attention</b><div class="note">Oldest waiting 3h · 1 expires today</div><div style="margin-top:6px"><span class="btn p">Open inbox</span></div></div>
+      <div class="note">P1 urgency + risk in the email itself</div>
+    </div>
+    <div class="col" style="flex:1">
+      <div class="lane hot">
+        <div class="lbl" style="color:var(--risk)">Needs your attention · 2</div>
+        <div class="row"><b>Dana Levi</b><span class="tag r">Own · prod</span><span class="tag r">first time</span><span class="sp"></span><span class="mute">waiting 3h</span><span class="btn">Review →</span></div>
+        <div class="row"><b>Omer K.</b><span class="tag r">sensitive data</span><span class="tag w">8h duration</span><span class="sp"></span><span class="mute">expires 6pm</span><span class="btn">Review →</span></div>
+      </div>
+      <div class="lane">
+        <div class="lbl">Routine · 10 · explained</div>
+        <div class="row"><input type="checkbox" checked> <b>Noa S.</b><span class="tag k">view · dev</span><span class="mute">7 of 8 teammates have this</span></div>
+        <div class="row"><input type="checkbox" checked> <b>Avi R.</b><span class="tag k">edit · staging</span><span class="mute">approved for him 4× before</span></div>
+        <div class="row"><input type="checkbox" checked> <b>+ 8 more</b><span class="mute">all view/edit, non-prod, normal for team</span></div>
+        <div style="display:flex;gap:8px;margin-top:6px"><span class="btn p">Stage 10 approvals</span><span class="mute" style="align-self:center">→ review summary → Submit</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- B · Focus mode -->
+<section class="c" id="B">
+  <div class="hd"><b>B · Focus mode</b><span>one request at a time · keyboard triage, like a mod queue</span></div>
+  <div class="thesis">"One clear card per request, with what it grants, how risky it is and whether it's normal. Decide, then the next card loads."</div>
+  <div class="frame">
+    <div class="col" style="width:150px">
+      <div class="lbl">Queue · 12</div>
+      <div class="box" style="border-color:var(--ink)"><b>Dana</b> <span class="tag r">risk</span></div>
+      <div class="box"><b>Noa</b> <span class="tag k">low</span></div>
+      <div class="box"><b>Avi</b> <span class="tag k">low</span></div>
+      <div class="box"><b>Omer</b> <span class="tag w">med</span></div>
+      <div class="note">sorted by risk × wait</div>
+    </div>
+    <div class="col" style="flex:1">
+      <div class="box">
+        <div style="display:flex;gap:8px;align-items:center"><b style="font-size:16px">Dana Levi</b><span class="mute">Backend · your report</span><span class="sp"></span><span class="tag w">waiting 3h · SLA 4h</span></div>
+        <div style="margin:8px 0" class="lbl">Wants</div>
+        <div><b>Own</b> on <b>prod-billing-db</b> (RDS · production) for <b>4h</b></div>
+        <div style="margin-top:6px"><span class="tag r">Own on production</span><span class="tag r">first time for Dana</span><span class="tag w">1 of 9 teammates has this</span></div>
+        <div style="margin:8px 0" class="lbl">Why</div><div>"Fix failed migration, INC-2231 (P1)"</div>
+        <div style="margin:8px 0" class="lbl">Own allows</div><div class="mute">delete database · change parameters · read all rows</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center"><span class="btn p">Approve <span class="kbd">A</span></span><span class="btn">Approve less <span class="kbd">L</span></span><span class="btn">Ask <span class="kbd">?</span></span><span class="btn d">Reject <span class="kbd">R</span></span><span class="sp"></span><span class="mute">next <span class="kbd">J</span></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- C · Per-resource review -->
+<section class="c" id="C">
+  <div class="hd"><b>C · Per-resource review</b><span>granular · decide each resource, like reviewing files in a PR</span></div>
+  <div class="thesis">"Requests mix safe and risky items. Decide each resource, narrow the level where it's too much, and see exactly what you're granting before you submit."</div>
+  <div class="frame">
+    <div class="col" style="flex:1">
+      <div style="display:flex;gap:8px;align-items:center"><b style="font-size:15px">Dana Levi · 9 resources</b><span class="mute">INC-2231 · 4h</span><span class="sp"></span><span class="tag w">waiting 3h</span></div>
+      <div class="box" style="padding:0">
+        <div class="row g"><span class="lbl" style="width:190px">Resource</span><span class="lbl" style="width:90px">Level</span><span class="lbl" style="flex:1">Signal</span><span class="lbl">Decision</span></div>
+        <div class="row" style="background:#fffafa"><span style="width:190px"><b>prod-billing-db</b></span><span style="width:90px"><span class="tag r">Own</span></span><span style="flex:1" class="mute">prod · first time · 1/9 peers</span><span class="btn">Edit ▾</span><span class="btn d">✕</span></div>
+        <div class="row"><span style="width:190px">billing-logs (S3)</span><span style="width:90px"><span class="tag k">View</span></span><span style="flex:1" class="mute">normal for team</span><span class="btn p">✓</span></div>
+        <div class="row"><span style="width:190px">billing-api (EKS ns)</span><span style="width:90px"><span class="tag w">Edit</span></span><span style="flex:1" class="mute">staging · had it last week</span><span class="btn p">✓</span></div>
+        <div class="row"><span style="width:190px" class="mute">+ 6 more · all view</span><span style="width:90px"></span><span style="flex:1" class="mute">low risk</span><span class="btn p">✓ all 6</span></div>
+      </div>
+      <div class="box g" style="display:flex;align-items:center;gap:8px"><b>You're granting 8 of 9</b><span class="mute">· 1 narrowed Own → Edit · 0 on prod at Own</span><span class="sp"></span><span class="btn p">Submit decision</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- D · Recommendation-first -->
+<section class="c" id="D">
+  <div class="hd"><b>D · Recommendation-first</b><span>the system proposes, the human ratifies · copilot model</span></div>
+  <div class="thesis">"Every request already has an explained recommendation. Accept the ones you agree with in bulk, and override the rest."</div>
+  <div class="frame">
+    <div class="col" style="flex:1">
+      <div class="box" style="padding:0">
+        <div class="row g"><span class="lbl" style="width:150px">Requester</span><span class="lbl" style="width:160px">Access</span><span class="lbl" style="flex:1">Recommendation · why</span><span class="lbl">You</span></div>
+        <div class="row"><b style="width:150px">Noa S.</b><span style="width:160px">view · dev</span><span style="flex:1"><span class="tag k">Approve</span><span class="mute">7/8 teammates have it</span></span><span class="mute">—</span></div>
+        <div class="row"><b style="width:150px">Avi R.</b><span style="width:160px">edit · staging</span><span style="flex:1"><span class="tag k">Approve</span><span class="mute">approved 4× before</span></span><span class="mute">—</span></div>
+        <div class="row"><b style="width:150px">Dana L.</b><span style="width:160px">own · prod</span><span style="flex:1"><span class="tag r">Look closer</span><span class="mute">first time, 1/9 peers</span></span><span class="mute">—</span></div>
+        <div class="row"><b style="width:150px">+ 9 more</b><span style="width:160px"></span><span style="flex:1"><span class="tag k">Approve ×9</span></span><span class="mute">—</span></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center"><span class="btn p">Accept 11 recommendations</span><span class="mute">1 needs you</span></div>
+      <div class="note">⚠ Automation-bias risk (A-5): one click ratifies 11 decisions. Weak "what the human saw" evidence.</div>
+    </div>
+  </div>
+</section>
+
+<!-- E · Risk-adaptive friction -->
+<section class="c" id="E">
+  <div class="hd"><b>E · Risk-adaptive friction</b><span>one page that changes with risk · polymorphic, not uniform</span></div>
+  <div class="thesis">"The same screen asks for more as the risk goes up: one tap for low risk, a summary for medium, and an explicit acknowledgement for high risk."</div>
+  <div class="frame">
+    <div class="col" style="flex:1"><div class="lbl">Low · view on dev</div>
+      <div class="box"><b>Noa · view · dev</b><div class="mute">normal for team</div><div style="margin-top:20px"><span class="btn p">Approve</span> <span class="btn">Reject</span></div></div></div>
+    <div class="col" style="flex:1"><div class="lbl">Medium · edit staging</div>
+      <div class="box"><b>Avi · edit · staging</b><div class="mute">8h duration</div><div class="box g" style="margin-top:6px">Summary: Avi can <b>modify</b> billing-api until 18:00</div><div style="margin-top:6px"><span class="btn p">Confirm approve</span></div></div></div>
+    <div class="col" style="flex:1"><div class="lbl" style="color:var(--risk)">High · own on prod</div>
+      <div class="box" style="border-color:var(--risk);background:#fffafa"><b>Dana · OWN · prod-billing-db</b><div class="mute">first time · 1/9 peers</div>
+        <div style="margin-top:6px"><input type="checkbox"> Dana can <b>delete</b> this production DB for 4h</div>
+        <div style="margin-top:4px"><span class="lbl">Reason (required)</span><div class="ln" style="height:22px;background:#fff;border:1px solid var(--line)"></div></div>
+        <div style="margin-top:6px"><span class="btn p">Approve OWN on prod</span></div></div></div>
+  </div>
+</section>
+
+<!-- F · Conversation-first -->
+<section class="c" id="F">
+  <div class="hd"><b>F · Conversation-first</b><span>the request as a thread · ask, narrow and decide in context</span></div>
+  <div class="thesis">"Most bad approvals come from missing context. Make asking cheap, and let the decision happen inside the conversation."</div>
+  <div class="frame">
+    <div class="col" style="width:200px"><div class="lbl">Threads</div><div class="box" style="border-color:var(--ink)"><b>Dana · prod-billing</b><div class="note">you asked 10m ago</div></div><div class="box"><b>Noa · dev logs</b></div><div class="box"><b>Avi · staging</b></div></div>
+    <div class="col" style="flex:1">
+      <div class="box g"><b>Dana</b>: Own on prod-billing-db, 4h. "Fix failed migration INC-2231"</div>
+      <div class="box" style="margin-left:60px"><b>You</b>: Does Edit cover it? Own lets you drop the DB.</div>
+      <div class="box g"><b>Dana</b>: Edit is enough, I need to run ALTER only.</div>
+      <div class="sp"></div>
+      <div style="display:flex;gap:8px"><span class="btn p">Approve as Edit</span><span class="btn">Approve Own</span><span class="btn d">Reject</span></div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const id = (location.hash || '#A').slice(1);
+  (document.getElementById(id) || document.getElementById('A')).classList.add('on');
+</script>
+</body>
+</html>

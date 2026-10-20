@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apono · Approval Moment — Aviv Zommer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fffefe;
+    --fg: #14110d;
+    --mid: #716c63;
+    --faint: #b3ada1;
+    --surface: #f5f1ea;
+    --border: #ebe6dc;
+    --accent: #d9480f;
+    --accent-soft: #fdeee6;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { font-family: var(--font); background: var(--bg); color: var(--fg); -webkit-font-smoothing: antialiased; overflow: hidden; }
+
+  /* ── deck ── */
+  .deck { position: relative; height: 100%; }
+  .slide {
+    position: absolute; inset: 0; padding: 72px 8vw 88px;
+    display: flex; flex-direction: column; justify-content: center; gap: 36px;
+    opacity: 0; transform: translateX(24px); pointer-events: none; visibility: hidden;
+    transition: opacity .45s ease, transform .45s ease, visibility 0s linear .45s;
+    overflow-y: auto;
+  }
+  .slide.on { opacity: 1; transform: none; pointer-events: auto; visibility: visible; transition-delay: 0s; }
+  .slide.prev { transform: translateX(-24px); }
+
+  /* ── type ── */
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .13em; text-transform: uppercase; color: var(--mid); }
+  h1 { font-size: clamp(44px, 6vw, 84px); font-weight: 600; letter-spacing: -0.045em; line-height: 1.02; }
+  h2 { font-size: clamp(32px, 3.8vw, 52px); font-weight: 600; letter-spacing: -0.04em; line-height: 1.08; max-width: 20ch; }
+  h3 { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  .lead { font-size: clamp(17px, 1.5vw, 21px); color: var(--mid); line-height: 1.5; max-width: 52ch; }
+  .small { font-size: 13px; color: var(--mid); line-height: 1.5; }
+  .muted { color: var(--faint); }
+  .hl { background: linear-gradient(transparent 62%, var(--accent-soft) 62%); }
+
+  /* ── layout helpers ── */
+  .row { display: flex; gap: 20px; flex-wrap: wrap; }
+  .grid { display: grid; gap: 20px; }
+  .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .split { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 56px; align-items: center; }
+  .card { background: var(--surface); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 8px; }
+  .card .num { font-size: 12px; font-weight: 600; color: var(--faint); }
+  .card p { font-size: 15px; color: var(--mid); line-height: 1.45; }
+  .shot { width: 100%; border-radius: 14px; border: 1px solid var(--border); box-shadow: 0 20px 50px -24px rgba(20,17,13,.25); background: #fff; display: block; }
+  .shot.contain { object-fit: contain; max-height: 52vh; }
+  figure { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  figcaption { font-size: 13px; color: var(--mid); }
+  figcaption b { color: var(--fg); font-weight: 600; }
+
+  /* ── the decision marker: one consistent signature across the deck ── */
+  .decision {
+    display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: baseline;
+    border-left: 3px solid var(--accent); padding: 4px 0 4px 18px; max-width: 70ch;
+  }
+  .decision .tag { grid-row: span 2; font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #fff; background: var(--accent); border-radius: 999px; padding: 4px 10px; align-self: start; white-space: nowrap; }
+  .decision p { font-size: clamp(17px, 1.4vw, 20px); font-weight: 600; letter-spacing: -0.015em; line-height: 1.35; }
+  .decision em { font-style: normal; font-size: 14px; color: var(--mid); }
+
+  /* ── process ── */
+  .steps { display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 0; border-top: 1px solid var(--border); }
+  .step { padding: 18px 16px 0 0; position: relative; }
+  .step::before { content: ""; position: absolute; top: -5px; left: 0; width: 9px; height: 9px; border-radius: 50%; background: var(--fg); }
+  .step b { display: block; font-size: 15px; letter-spacing: -0.01em; }
+  .step span { font-size: 13px; color: var(--mid); }
+  .stats { display: flex; gap: 48px; flex-wrap: wrap; }
+  .stat b { display: block; font-size: clamp(36px, 4vw, 56px); font-weight: 600; letter-spacing: -0.04em; line-height: 1; }
+  .stat span { font-size: 13px; color: var(--mid); }
+
+  /* ── compare / chips ── */
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; border-radius: 999px; padding: 5px 11px; white-space: nowrap; }
+  .p-gray { background: var(--surface); color: var(--mid); }
+  .p-amber { background: #fff3dd; color: #a35a00; }
+  .p-blue { background: #e7f0ff; color: #2459c7; }
+  .p-red { background: #fde7e4; color: #c0281a; }
+  .p-green { background: #e6f5ec; color: #1d7a45; }
+  .x { text-decoration: line-through; text-decoration-color: var(--accent); color: var(--faint); }
+  .tier { display: grid; grid-template-columns: 170px 1fr 190px; gap: 18px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .tier:last-child { border-bottom: 0; }
+  .tier q { font-size: 15.5px; quotes: "“" "”"; }
+  .tier .act { font-size: 13px; font-weight: 600; text-align: right; }
+
+  .result { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .result div { text-align: center; padding: 12px; border-radius: 12px; font-weight: 600; font-size: 15px; }
+
+  /* ── tree ── */
+  .tree { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; }
+  .q { border: 1px solid var(--border); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+  .q b { font-size: 15px; letter-spacing: -0.01em; }
+  .q .out { font-size: 12.5px; color: var(--mid); }
+
+  /* ── live prototype ── */
+  .slide[data-live] { padding: 56px 20px 76px; }
+  .live { display: flex; flex-direction: column; gap: 14px; height: 100%; }
+  .live-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .tab { font: inherit; font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: #fff; color: var(--mid); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+  .tab.on { background: var(--fg); color: #fff; border-color: var(--fg); }
+  .frame { flex: 1; min-height: 52vh; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: 0 20px 50px -24px rgba(20,17,13,.25); position: relative; background: var(--surface); }
+  .frame iframe { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
+  .frame .fallback { position: absolute; inset: 0; display: none; }
+  .frame.offline iframe { display: none; }
+  .frame.offline .fallback { display: block; }
+  .frame .fallback img { width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .frame .fallback span { position: absolute; left: 16px; bottom: 16px; background: rgba(20,17,13,.85); color: #fff; font-size: 12px; padding: 8px 12px; border-radius: 8px; }
+
+  /* ── chrome ── */
+  .top { position: fixed; top: 0; left: 0; right: 0; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 8vw; z-index: 10; pointer-events: none; }
+  .brand { font-size: 13px; font-weight: 500; letter-spacing: -0.015em; }
+  .brand span { color: var(--faint); }
+  .chapter { font-size: 11px; font-weight: 600; letter-spacing: .13em; text-transform: uppercase; color: var(--faint); }
+
+
+  /* ── v2 additions ── */
+  .dnum { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  .why { font-size: clamp(16px, 1.35vw, 19px); color: var(--mid); line-height: 1.5; max-width: 46ch; }
+  .why b { color: var(--fg); font-weight: 600; }
+  .check { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .check td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .check td:first-child { color: var(--mid); width: 34%; }
+  .check td:last-child { width: 28px; text-align: right; font-weight: 700; }
+  .ok { color: #1d7a45; } .part { color: #a35a00; }
+  .record { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px; font-size: 14px; display: grid; grid-template-columns: 130px 1fr; gap: 8px 16px; box-shadow: 0 20px 50px -24px rgba(20,17,13,.25); }
+  .record span { color: var(--mid); }
+  .record .seen { grid-column: 1 / -1; background: var(--surface); border-radius: 10px; padding: 12px 14px; }
+  .record .seen small { display: block; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--mid); margin-bottom: 4px; }
+
+
+  /* ── research slides ── */
+  .persona { background: var(--surface); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+  .persona .who { display: flex; align-items: center; gap: 10px; }
+  .persona .av { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 12px; font-weight: 700; }
+  .persona dl { display: grid; grid-template-columns: 74px 1fr; gap: 6px 10px; font-size: 14px; }
+  .persona dt { color: var(--faint); font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; padding-top: 2px; }
+  .persona dd { color: var(--fg); line-height: 1.4; }
+  .quote { font-size: 14px; color: var(--mid); border-left: 2px solid var(--border); padding-left: 12px; line-height: 1.45; }
+  .quote cite { display: block; font-style: normal; font-size: 12px; color: var(--faint); margin-top: 4px; }
+  .flow { display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 8px; }
+  .stage { border: 1px solid var(--border); border-radius: 12px; padding: 14px 12px; display: flex; flex-direction: column; gap: 6px; min-height: 128px; position: relative; background: #fff; }
+  .stage .n { font-size: 11px; font-weight: 600; color: var(--faint); }
+  .stage b { font-size: 15px; letter-spacing: -0.01em; }
+  .stage span { font-size: 12.5px; color: var(--mid); line-height: 1.4; }
+  .stage.break { border-color: #e8b9a3; border-style: dashed; }
+  .stage.break::after { content: "Opportunity"; position: absolute; top: -10px; right: 10px; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 2px 8px; }
+  .lanes { display: grid; grid-template-columns: 110px 1fr; gap: 10px 14px; align-items: center; font-size: 13px; }
+  .lanes .l { color: var(--faint); font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+  .ref { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .ref img { width: 100%; height: 150px; object-fit: cover; object-position: top left; border-radius: 12px; border: 1px solid var(--border); background: #fff; }
+  .ref b { font-size: 14px; letter-spacing: -0.01em; }
+  .ref span { font-size: 12.5px; color: var(--mid); line-height: 1.4; }
+  .borrow { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+  .borrow .card h3 { font-size: 16px; }
+  .borrow .from { font-size: 12px; color: var(--faint); }
+  .borrow .to { font-size: 13px; font-weight: 600; color: var(--accent); margin-top: auto; padding-top: 8px; }
+  @media (max-width: 900px) { .flow, .borrow { grid-template-columns: 1fr; } .stage { min-height: 0; } }
+
+
+  /* ── mechanic slide ── */
+  .mech { display: grid; grid-template-columns: minmax(0,0.8fr) minmax(0,1.2fr); gap: 32px; align-items: stretch; }
+  .radar { background: var(--surface); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+  .radar .row-q { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; color: var(--mid); padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .radar .row-q:last-of-type { border-bottom: 0; }
+  .radar .row-q b { color: var(--fg); font-weight: 500; }
+  .pops { display: flex; flex-direction: column; gap: 12px; }
+  .pop { border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; display: grid; grid-template-columns: 190px 1fr; gap: 6px 16px; align-items: start; background: #fff; box-shadow: 0 10px 30px -20px rgba(20,17,13,.25); }
+  .pop q { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; quotes: "“" "”"; line-height: 1.35; }
+  .pop .whyline { grid-column: 2; font-size: 13px; color: var(--mid); }
+  .colhead { font-size: 11px; font-weight: 600; letter-spacing: .13em; text-transform: uppercase; color: var(--mid); }
+  @media (max-width: 900px) { .mech { grid-template-columns: 1fr; } .pop { grid-template-columns: 1fr; } .pop .whyline { grid-column: 1; } }
+
+
+  /* ── origins slide ── */
+  .origin { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .origin .opt { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .origin img { width: 100%; height: 34vh; object-fit: cover; object-position: top left; border-radius: 12px; border: 1px solid var(--border); background: #fff; box-shadow: 0 16px 40px -24px rgba(20,17,13,.25); }
+  .origin .src { font-size: 13px; color: var(--mid); line-height: 1.45; }
+  .origin .src b { color: var(--fg); font-weight: 600; }
+  .origin .also { font-size: 12px; color: var(--faint); }
+
+
+  /* ── merged decision 02 ── */
+  .opts { gap: 28px; }
+  .optcol { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .optcol .opt { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+  .optcol .chosen { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #fff; background: var(--accent); border-radius: 999px; padding: 3px 8px; }
+  .src-row { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; background: var(--surface); border-radius: 12px; padding: 8px; }
+  .src-row img { width: 96px; height: 62px; object-fit: cover; object-position: top left; border-radius: 8px; border: 1px solid var(--border); background: #fff; }
+  .src-row span { font-size: 12.5px; color: var(--mid); line-height: 1.4; }
+  .src-row b { color: var(--fg); font-weight: 600; }
+  .optcol .arrow { font-size: 12px; color: var(--faint); padding-left: 4px; }
+  .optcol .mine { width: 100%; height: 26vh; object-fit: cover; object-position: top left; border-radius: 12px; border: 1px solid var(--border); background: #fff; box-shadow: 0 16px 40px -24px rgba(20,17,13,.25); }
+  .optcol .res { text-align: center; padding: 10px; border-radius: 10px; font-weight: 600; font-size: 14px; }
+
+
+  .kpis { gap: 24px; margin-top: 8px; }
+  .kpi { border: 1px solid var(--border); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 10px; background: var(--bg); }
+  .kpi-n { font-size: 13px; font-weight: 600; color: var(--accent); letter-spacing: .08em; }
+  .kpi h3 { font-size: 28px; letter-spacing: -.03em; line-height: 1.15; }
+  .kpi p { color: var(--mid); font-size: 15.5px; }
+  .kpi .kpi-goal { color: var(--fg); padding-top: 12px; border-top: 1px solid var(--border); }
+  .flag-split { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 48px; }
+  .flags { display: flex; flex-direction: column; gap: 14px; }
+  .flags figure { gap: 4px; }
+  .flags .shot { width: auto; max-width: 100%; max-height: 25vh; border: 0; box-shadow: none; border-radius: 0; background: transparent; }
+  .flags figcaption { padding-left: 12px; font-size: 14px; }
+  .problem { border-left: 3px solid var(--accent); padding: 4px 0 4px 28px; display: flex; flex-direction: column; gap: 14px; margin-top: 12px; }
+  .problem p { font-size: clamp(26px, 2.8vw, 40px); line-height: 1.2; letter-spacing: -0.03em; font-weight: 500; color: var(--mid); max-width: 26ch; }
+  .problem p b { color: var(--fg); font-weight: 600; }
+  .actors { display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 8px; margin-bottom: -8px; }
+  .actor { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: 2px solid var(--c); font-size: 13px; color: var(--mid); white-space: nowrap; overflow: hidden; }
+  .actor b { color: var(--fg); font-weight: 600; }
+  .actor .av { width: 24px; height: 24px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: #fff; font-size: 10px; font-weight: 700; }
+  @media (max-width: 900px) { .actors { display: none; } }
+  .mail-tabs { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .mail-tabs { margin-bottom: 6px; }
+  .mail-tabs .pill { font-size: 14px; padding: 7px 14px; border: 1.5px solid transparent; cursor: pointer; font-family: inherit; opacity: .55; transition: opacity .15s, border-color .15s; }
+  .mail-tabs .pill:hover { opacity: .85; }
+  .mail-tabs .pill.on { opacity: 1; border-color: currentColor; }
+  /* ── controls: floating pill (same as the avivzommer.com decks) ── */
+  .dk-progress { position: fixed; left: 0; right: 0; bottom: 0; height: 3px; z-index: 10; }
+  .dk-progress i { display: block; height: 100%; background: var(--fg); transform-origin: 0 50%; transform: scaleX(var(--p, 0)); transition: transform .5s cubic-bezier(.22,1,.36,1); }
+  .dk-bar { position: fixed; left: 50%; bottom: 18px; z-index: 20; display: flex; align-items: center; gap: 4px; padding: 5px; border-radius: 999px; background: rgba(20,17,13,.9); color: var(--bg); box-shadow: 0 14px 34px -10px rgba(20,17,13,.45); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transform: translateX(-50%); transition: opacity .3s ease, transform .3s cubic-bezier(.22,1,.36,1); }
+  body.is-idle .dk-bar:not(:focus-within) { opacity: 0; transform: translate(-50%, 10px); pointer-events: none; }
+  .dk-bar button { display: inline-grid; place-items: center; min-width: 38px; height: 38px; padding: 0 10px; border: 0; border-radius: 999px; background: transparent; color: inherit; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: background .2s ease; }
+  .dk-bar button:hover { background: rgba(255,254,254,.12); }
+  .dk-bar button:disabled { opacity: .35; cursor: default; background: transparent; }
+  .dk-bar button:focus-visible { outline: 2px solid #ffd96b; outline-offset: 1px; }
+  .dk-bar svg { width: 16px; height: 16px; }
+  .dk-bar .dk-num { min-width: 64px; font-variant-numeric: tabular-nums; color: rgba(255,254,254,.75); }
+  .dk-bar i { width: 1px; height: 18px; background: rgba(255,254,254,.18); margin: 0 4px; }
+  .dk-menu { position: fixed; left: 50%; bottom: 72px; z-index: 21; width: 380px; max-height: min(620px, calc(100vh - 100px)); overflow: auto; padding: 10px; border-radius: 18px; background: var(--bg); border: 1px solid var(--border); box-shadow: 0 24px 60px -16px rgba(20,17,13,.35); transform: translateX(-50%); }
+  .dk-menu[hidden] { display: none; }
+  .dk-menu h4 { padding: 12px 12px 6px; font-size: 10.5px; font-weight: 500; letter-spacing: .13em; text-transform: uppercase; color: var(--faint); }
+  .dk-menu button { display: flex; gap: 12px; width: 100%; padding: 9px 12px; border: 0; border-radius: 10px; background: none; font: inherit; font-size: 14px; color: var(--fg); text-align: left; cursor: pointer; }
+  .dk-menu button b { width: 22px; flex-shrink: 0; font-weight: 500; font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; padding-top: 1px; }
+  .dk-menu button:hover { background: var(--surface); }
+  .dk-menu button.is-cur { background: var(--fg); color: var(--bg); }
+  .dk-menu button.is-cur b { color: rgba(255,254,254,.6); }
+  .dk-hint { position: fixed; left: 50%; top: 22px; z-index: 22; transform: translateX(-50%); padding: 10px 18px; border-radius: 999px; background: rgba(20,17,13,.9); color: var(--bg); font-size: 13px; transition: opacity .5s ease; pointer-events: none; white-space: nowrap; }
+  .dk-hint kbd { display: inline-block; min-width: 22px; padding: 1px 6px; margin: 0 2px; border-radius: 5px; background: rgba(255,254,254,.16); font: inherit; font-size: 12px; text-align: center; }
+  .dk-hint.is-out { opacity: 0; }
+  /* next step: automation rule */
+  .rule { border: 1px solid var(--border); border-radius: 18px; background: #fff; box-shadow: 0 24px 50px -28px rgba(20,17,13,.3); padding: 22px; display: flex; flex-direction: column; gap: 18px; }
+  .rule-head { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .rule-head b { display: block; font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+  .rule-head small { font-size: 12.5px; color: var(--mid); }
+  .rule-ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--surface); font-size: 18px; }
+  .rule-on { margin-left: auto; width: 40px; height: 24px; border-radius: 999px; background: var(--fg); position: relative; flex: none; }
+  .rule-on::after { content: ""; position: absolute; right: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; }
+  .rule-block small { display: block; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--mid); margin-bottom: 10px; }
+  .rule-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .rule-list li { position: relative; padding-left: 28px; font-size: 15px; line-height: 1.4; }
+  .rule-list li::before { position: absolute; left: 0; top: 0; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+  .rule-list.ok li::before { content: "✓"; background: #e6f5ec; color: #1d7a45; }
+  .rule-list.ask li::before { content: "?"; background: #fff3dd; color: #a35a00; }
+  .rule-foot { font-size: 13px; color: var(--mid); padding-top: 14px; border-top: 1px solid var(--border); }
+  /* thank you */
+  .s-end { overflow: hidden; }
+  .s-end > *:not(.end-glow) { position: relative; z-index: 1; }
+  .end-glow { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+  .end-glow i { position: absolute; width: 900px; height: 900px; right: -160px; top: -260px; border-radius: 50%; background: #ffd96b; filter: blur(70px); opacity: 0; transform: scale(.7); transition: opacity 2.4s ease, transform 3.2s cubic-bezier(.22,1,.36,1); }
+  .s-end.on .end-glow i { opacity: .5; transform: none; animation: glow-drift 9s ease-in-out 3s infinite alternate; }
+  @keyframes glow-drift { to { transform: translate(-40px, 30px) scale(1.08); } }
+  .end-title { font-size: clamp(80px, 10vw, 150px); font-weight: 600; letter-spacing: -0.05em; line-height: 1; }
+  .hw { padding: 0 6px; background-image: linear-gradient(#ffd96b, #ffd96b); background-repeat: no-repeat; background-position: 0 88%; background-size: 0% 38%; transition: background-size 1.2s cubic-bezier(.22,1,.36,1) 1s; }
+  .slide.on .hw { background-size: 100% 38%; }
+  .end-sub { font-size: 22px; color: var(--mid); }
+  .end-cards { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 24px; }
+  .end-card { display: flex; align-items: center; gap: 16px; padding: 18px 26px 18px 18px; border-radius: 20px; background: #fff; box-shadow: 0 0 0 1px var(--border), 0 18px 36px -22px rgba(20,17,13,.3); font-size: 17px; color: var(--fg); text-decoration: none; transition: transform .2s ease, box-shadow .2s ease; }
+  .end-card:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--fg), 0 22px 40px -22px rgba(20,17,13,.35); }
+  .end-card small { display: block; font-size: 11px; font-weight: 500; letter-spacing: .13em; text-transform: uppercase; color: var(--faint); margin-bottom: 3px; }
+  .ec-ico { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; background: #ffd96b; flex: none; }
+  .ec-ico svg { width: 24px; height: 24px; }
+  /* ── lightbox ── */
+  .slide img:not(.av) { cursor: zoom-in; }
+  .lightbox { position: fixed; inset: 0; z-index: 50; background: rgba(20,17,13,.88); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 32px; opacity: 0; pointer-events: none; transition: opacity .2s ease; cursor: zoom-out; }
+  .lightbox.open { opacity: 1; pointer-events: auto; }
+  .lightbox img { max-width: 100%; max-height: calc(100vh - 110px); object-fit: contain; border-radius: 10px; background: #fff; box-shadow: 0 30px 80px rgba(0,0,0,.4); }
+  .lightbox p { color: rgba(255,255,255,.8); font-size: 14px; text-align: center; max-width: 80ch; }
+  .lightbox button { position: absolute; top: 18px; right: 22px; width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); background: transparent; color: #fff; font-size: 18px; cursor: pointer; }
+
+  @media (max-width: 900px) {
+    body { overflow: auto; }
+    .slide { position: relative; opacity: 1; transform: none; pointer-events: auto; visibility: visible; min-height: 100vh; padding: 72px 16px 72px; overflow: visible; }
+    .slide.prev { transform: none; }
+    .g3, .g4, .g2, .split, .steps, .tree, .result { grid-template-columns: 1fr; }
+    .tier { grid-template-columns: 1fr; gap: 6px; }
+    .tier .act { text-align: left; }
+    .top, .dk-bar, .dk-menu, .dk-hint, .dk-progress { display: none; }
+    .frame { min-height: 70vh; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top"><div class="brand">Aviv Zommer <span>· Apono home assignment</span></div><div class="chapter" id="chapter"></div></header>
+
+<main class="deck" id="deck">
+
+  <!-- 01 · Cover -->
+  <section class="slide" data-chapter="">
+    <div class="eyebrow">Apono · Home assignment</div>
+    <h1>Fast for the routine.<br><span class="muted">Careful for the risky.</span></h1>
+    <p class="small">Aviv Zommer · Senior Product Designer</p>
+  </section>
+
+  <!-- 02 · How I read the brief -->
+  <section class="slide" data-chapter="The brief">
+    <div class="eyebrow">How I read the brief</div>
+    <h2>One email. One click. No undo. And three people depending on it.</h2>
+    <div class="problem">
+      <span class="dnum">The real problem</span>
+      <p><b>Attention</b>, not buttons. Getting the approver to look at the right request, for the right amount of time.</p>
+    </div>
+  </section>
+
+
+  <!-- R1 · People -->
+  <section class="slide" data-chapter="Research · People">
+    <div class="eyebrow">Research 01 · Who's involved</div>
+    <h2>I started with the people, and what each one is actually trying to do.</h2>
+    <div class="grid g3">
+      <div class="persona">
+        <div class="who"><span class="av" style="background:#ec4899">DL</span><div><b>Dana</b><div class="small">Engineer · requester</div></div></div>
+        <dl><dt>Wants</dt><dd>To get unblocked in minutes</dd><dt>Fears</dt><dd>Waiting on someone in meetings; silent rejections</dd><dt>Risk</dt><dd>Asks for too much "so I won't have to ask again"</dd></dl>
+      </div>
+      <div class="persona" style="outline:2px solid var(--fg)">
+        <div class="who"><span class="av" style="background:#6366f1">MC</span><div><b>Maya</b><div class="small">Eng manager · approver</div></div></div>
+        <dl><dt>Wants</dt><dd>To clear the routine fast and catch the one that matters</dd><dt>Knows</dt><dd>The person, not the AWS permission</dd><dt>Risk</dt><dd>Rubber-stamps: "I trust my people"</dd></dl>
+        <p class="quote">"If my person asked for it, they probably need it."<cite>My assumption of how Maya thinks</cite></p>
+      </div>
+      <div class="persona">
+        <div class="who"><span class="av" style="background:#64748b">RB</span><div><b>Ron</b><div class="small">Security lead · admin</div></div></div>
+        <dl><dt>Wants</dt><dd>Proof that every grant was justified</dd><dt>Fears</dt><dd>"Approved" with no reason; risky access nobody looked at</dd><dt>Needs</dt><dd>Who, what, how long, and why</dd></dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- R2 · Journey -->
+  <section class="slide" data-chapter="Research · Journey">
+    <div class="eyebrow">Research 02 · The request, end to end</div>
+    <h2>I mapped the journey to find where design could help.</h2>
+    <div class="actors">
+      <div class="actor" style="grid-column:1 / span 1;--c:#ec4899"><span class="av">DL</span><span><b>Dana</b> · Requester</span></div>
+      <div class="actor" style="grid-column:2 / span 4;--c:#6366f1"><span class="av">MC</span><span><b>Maya</b> · Approver</span></div>
+      <div class="actor" style="grid-column:6 / span 1;--c:#ec4899"><span class="av">DL</span><span><b>Dana</b> · Requester</span></div>
+    </div>
+    <div class="flow">
+      <div class="stage"><span class="n">01</span><b>Request</b><span>Dana picks 1–10 resources and a level</span></div>
+      <div class="stage break"><span class="n">02</span><b>Notify</b><span>An email among dozens. Nothing says urgent or risky</span></div>
+      <div class="stage"><span class="n">03</span><b>Open</b><span>A list where every row looks the same</span></div>
+      <div class="stage break"><span class="n">04</span><b>Understand</b><span>What exactly? Is it risky? Is it normal? One click deep</span></div>
+      <div class="stage break"><span class="n">05</span><b>Decide</b><span>Approve or reject, all or nothing, no undo</span></div>
+      <div class="stage"><span class="n">06</span><b>Feedback</b><span>A rejection with no reason means resubmitting</span></div>
+    </div>
+    <div class="lanes">
+      <span class="l">Hypothesis</span><span>If the email doesn't say what's urgent or risky, requests may wait (stage 02)</span>
+      <span class="l">Hypothesis</span><span>If every request looks the same, risky ones may get rubber-stamped (stages 04–05)</span>
+    </div>
+  </section>
+
+  <!-- R3 · Market -->
+  <section class="slide" data-chapter="Research · Market">
+    <div class="eyebrow">Research 03 · What the market does</div>
+    <h2>I studied how identity tools handle thousands of decisions a day.</h2>
+    <div class="grid g3">
+      <div class="ref"><img src="assets/apono-portal.png" alt="Apono approvals list"><b>Apono today</b><span>Same-looking rows; the details are one click away</span></div>
+      <div class="ref"><img src="assets/c1-insights.png" alt="ConductorOne insights"><b>Explain each row</b><span>"1 of 302 users have this." · ConductorOne</span></div>
+      <div class="ref"><img src="assets/c1-agent.png" alt="ConductorOne assistant"><b>Bulk only the safe ones</b><span>46 approved, 2 high-risk kept for a human</span></div>
+      <div class="ref"><img src="assets/entra-user-list-preview.png" alt="Entra recommendations"><b>Recommendation + reason</b><span>"Deny: last sign-in unknown." · Microsoft Entra</span></div>
+      <div class="ref"><img src="assets/sailpoint-account-requests.png" alt="SailPoint request queue"><b>Built for a queue</b><span>Days old, assignee, bulk actions · SailPoint</span></div>
+      <div class="ref"><img src="assets/W11-vanta-sla.jpg" alt="Vanta needs attention"><b>Visible deadlines</b><span>Overdue / due soon at the top · Vanta</span></div>
+    </div>
+  </section>
+
+  <!-- R4 · Borrowed -->
+  <section class="slide" data-chapter="Research · Patterns">
+    <div class="eyebrow">Research 04 · What I borrowed from research and other fields</div>
+    <h2>Good decision design already exists. I looked outside security for it.</h2>
+    <div class="borrow">
+      <div class="card"><span class="from">Credit-card fraud alerts</span><h3>Compare to normal</h3><p>"Unusual for you" is clearer than a list of facts.</p></div>
+      <div class="card"><span class="from">GitHub "request changes"</span><h3>A third way</h3><p>Not yes, not no: fix it and come back.</p></div>
+    </div>
+  </section>
+
+
+  <!-- M · The mechanic -->
+  <section class="slide" data-chapter="The mechanic">
+    <div class="eyebrow">The mechanic</div>
+    <h2>Normal stays under the radar. Only three things pop up, and each one explains itself.</h2>
+    <div class="mech">
+      <div class="radar">
+        <span class="colhead">Under the radar</span>
+        <p class="small" style="font-size:14px">What the team usually gets. No color, no flags, approved together.</p>
+        <div>
+          <div class="row-q"><b>Noa · View billing-logs</b><span>8 of 9 teammates have this</span></div>
+          <div class="row-q"><b>Avi · Edit payments-api (staging)</b><span>had it 4× before</span></div>
+          <div class="row-q"><b>Shira · View gateway logs</b><span>had it 11× before</span></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span class="colhead">Pops up</span>
+        <div class="pops">
+          <div class="pop"><span class="pill p-amber">Unusual for your team</span><q>No one on your team has full control on prod-billing-db.</q><span class="whyline">Why it pops up: more access than the team normally gets.</span></div>
+          <div class="pop"><span class="pill p-blue">Looks like a mistake</span><q>Tamar asked for production, but this looks like test work.</q><span class="whyline">Why it pops up: the request doesn't match its own reason.</span></div>
+          <div class="pop"><span class="pill p-red">Not allowed</span><q>This would give Ben admin rights in production.</q><span class="whyline">Why it pops up: it crosses a line that's never approved.</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="why">My rule: every pop-up is <b>one sentence I could read aloud</b> to someone with no context.</p>
+  </section>
+
+  <!-- 03 · Decision 1 -->
+  <section class="slide" data-chapter="Decision 01">
+    <div class="split">
+      <div style="display:flex;flex-direction:column;gap:22px">
+        <span class="dnum">Decision 01</span>
+        <h2>I designed for a manager clearing a queue between meetings.</h2>
+        <p class="why">My first research wall used consumer approvals. It was wrong. At 1,000 people, a manager gets <b>5–15 requests in bursts</b>, from email. The unit of work is the queue, not one request.</p>
+      </div>
+      <figure class="mailsw" style="align-items:center">
+        <div class="mail-tabs" role="tablist" aria-label="Email examples">
+          <button class="pill p-gray on" data-img="assets/email-normal.png" data-cap="<b>Normal:</b> quiet. No color, approve it and move on.">Normal</button>
+          <button class="pill p-amber" data-img="assets/email-unusual.png" data-cap="<b>Unusual for your team:</b> more than the team usually gets.">Unusual</button>
+          <button class="pill p-blue" data-img="assets/email-mistake.png" data-cap="<b>Looks like a mistake:</b> the request doesn't match the reason.">Mistake</button>
+          <button class="pill p-red" data-img="assets/email-notallowed.png" data-cap="<b>Not allowed:</b> it crosses a policy line.">Not allowed</button>
+        </div>
+        <img class="shot" id="mail-img" style="max-height:60vh;width:auto;max-width:100%" src="assets/email-normal.png" alt="The approval email on a phone">
+        <figcaption id="mail-cap"><b>Normal:</b> quiet. No color, approve it and move on.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+
+  <!-- 04 · Decision 2 (source → my design → result) -->
+  <section class="slide" data-chapter="Decision 02">
+    <span class="dnum">Decision 02</span>
+    <h2 style="max-width:26ch">I let the system sort the queue, so the approver only thinks about the top.</h2>
+    <div class="grid g3 opts">
+      <div class="optcol">
+        <span class="opt">A · Sort the queue <span class="chosen">Chosen</span></span>
+        <div class="src-row"><img src="assets/c1-agent.png" alt="ConductorOne review assistant"><span><b>Idea from ConductorOne:</b> bulk-approve the low risk, keep the high risk for a human</span></div>
+        <span class="arrow">↓ my version</span>
+        <img class="mine" src="assets/A-portal-trap-desktop.png" alt="Option A design">
+        <div class="res p-green">Caught, and fast</div>
+      </div>
+      <div class="optcol">
+        <span class="opt">B · Decide every item</span>
+        <div class="src-row"><img src="assets/c1-review.png" alt="ConductorOne per-entitlement review"><span><b>Idea from ConductorOne / SailPoint:</b> approve or deny each item</span></div>
+        <span class="arrow">↓ my version</span>
+        <img class="mine" src="assets/B-list-trap-desktop.png" alt="Option B design">
+        <div class="res p-amber">Caught, but slow</div>
+      </div>
+      <div class="optcol">
+        <span class="opt">C · Accept the suggestions</span>
+        <div class="src-row"><img src="assets/entra-accept-recommendations.png" alt="Microsoft Entra accept recommendations"><span><b>Idea from Microsoft Entra:</b> accept every recommendation in one click</span></div>
+        <span class="arrow">↓ my version</span>
+        <img class="mine" src="assets/C-list-trap-desktop.png" alt="Option C design">
+        <div class="res p-red">Slipped through</div>
+      </div>
+    </div>
+    <p class="small">The test: I hid one risky request among nine routine ones and built all three in code.</p>
+  </section>
+
+  <!-- 05 · Decision 3 -->
+  <section class="slide" data-chapter="Decision 03">
+    <div class="split flag-split">
+      <div style="display:flex;flex-direction:column;gap:22px">
+        <span class="dnum">Decision 03</span>
+        <h2>Quiet when it's normal. One flag when it's not.</h2>
+        <p class="why">Then I had red everywhere. If everything is red, nothing is. So I compare each request to <b>what the team usually gets</b>. If it matches, the screen stays quiet. If it doesn't, the difference is the flag, in plain words anyone can repeat.</p>
+      </div>
+      <div class="flags">
+        <figure><img class="shot" src="assets/flag-unusual.png" alt="Unusual for your team flag"><figcaption><b>Unusual for your team.</b> The safe yes is the team's usual.</figcaption></figure>
+        <figure><img class="shot" src="assets/flag-mistake.png" alt="Looks like a mistake flag"><figcaption><b>Looks like a mistake.</b> It goes back to be fixed, not rejected.</figcaption></figure>
+        <figure><img class="shot" src="assets/flag-notallowed.png" alt="Not allowed flag"><figcaption><b>Not allowed.</b> Deny is the default, with what to do instead.</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- 09 · Live -->
+  <section class="slide" data-chapter="Live prototype" data-live>
+    <div class="live">
+      <div class="live-bar">
+        <span class="eyebrow" style="margin-right:8px">Live prototype</span>
+        <button class="tab on" data-src="/?option=A&scenario=trap&screen=email&embed=1">1 · The email</button>
+        <button class="tab" data-src="/?option=A&scenario=trap&screen=portal&embed=1">2 · The queue</button>
+        <button class="tab" data-src="/?option=A&scenario=trap&screen=portal&open=REQ-4830&embed=1">3 · The decision</button>
+        <button class="tab" data-src="/?option=A&scenario=incident&screen=portal&embed=1">P1 incident</button>
+      </div>
+      <div class="frame" id="frame">
+        <iframe id="live" title="Live prototype" loading="lazy"></iframe>
+        <div class="fallback"><img src="assets/A-portal-trap-desktop.png" alt="Prototype screenshot"><span>Run the prototype (npm run dev) and open localhost:5181/presentation/index.html to use it live</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · Next: automation -->
+  <section class="slide" data-chapter="Next step">
+    <div class="split">
+      <div style="display:flex;flex-direction:column;gap:22px">
+        <span class="dnum">Next step · an idea</span>
+        <h2>Let the security manager automate the normal.</h2>
+        <p class="why">The flags already know what's normal for each team. The next step is to hand that to the security manager as a rule: <b>normal, low-risk requests approve themselves</b>, and only the flagged ones reach a person. In the hidden-risk queue, 9 of the 10 requests are routine and could skip Maya entirely.</p>
+        <p class="small">Also next: the requester's side, so Dana sees where her request is and what to fix.</p>
+      </div>
+      <div class="rule">
+        <div class="rule-head"><span class="rule-ico">⚡</span><div><b>Auto-approve normal requests</b><small>Rule · set by the security manager</small></div><span class="rule-on" aria-label="On"></span></div>
+        <div class="rule-block">
+          <small>Approve on its own when</small>
+          <ul class="rule-list ok">
+            <li>It matches what the team usually gets</li>
+            <li>View on production, or any level outside production</li>
+            <li>A ticket is linked, and it's 4 hours or less</li>
+          </ul>
+        </div>
+        <div class="rule-block">
+          <small>Always ask a person when</small>
+          <ul class="rule-list ask">
+            <li>Any flag: unusual, looks like a mistake, not allowed</li>
+            <li>Full control or admin rights on production</li>
+            <li>Sensitive data, like financial or customer data</li>
+          </ul>
+        </div>
+        <p class="rule-foot">Every automatic approval is still in the audit log, and the rule can be turned off in one click.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 · Measure & test -->
+  <section class="slide" data-chapter="Did it work?">
+    <div class="eyebrow">How I'd know it worked</div>
+    <h2>Two numbers: is it fast, and are the flags right?</h2>
+    <div class="grid g2 kpis">
+      <div class="kpi">
+        <span class="kpi-n">01</span>
+        <h3>Time to decision</h3>
+        <p>Median minutes from request to decision.</p>
+        <p class="kpi-goal"><b>Goal:</b> goes down. The requester gets an answer fast.</p>
+      </div>
+      <div class="kpi">
+        <span class="kpi-n">02</span>
+        <h3>Flag accuracy</h3>
+        <p>Share of decisions that match what the flag suggested: normal → approve, unusual → approve smaller, mistake → send back, not allowed → deny.</p>
+        <p class="kpi-goal"><b>Goal:</b> as high as possible. Many decisions against the flag mean the flag was wrong, so the rule needs fixing.</p>
+      </div>
+    </div>
+    <p class="small">Read together: if the first goes down while the second stays high, it worked. One guardrail: flagged requests should still be opened before the decision, so a high match isn't just people clicking through. Before building, I'd test it with 6–8 managers on a queue with one risky request hidden among routine ones.</p>
+  </section>
+
+  <!-- 12 · Thank you -->
+  <section class="slide s-end" data-chapter="Thank you">
+    <div class="end-glow" aria-hidden="true"><i></i></div>
+    <div class="eyebrow">Sort it · Shrink it · Explain it</div>
+    <h1 class="end-title">Thank <span class="hw">you.</span></h1>
+    <p class="end-sub">Questions are welcome.</p>
+    <div class="end-cards">
+      <a class="end-card" href="https://avivzommer.com" target="_blank" rel="noopener"><span class="ec-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg></span><span><small>Portfolio</small>avivzommer.com</span></a>
+      <a class="end-card" href="mailto:avivzommmer@gmail.com"><span class="ec-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M4 7l8 6 8-6"/></svg></span><span><small>Email</small>avivzommmer@gmail.com</span></a>
+      <a class="end-card" href="https://www.linkedin.com/in/avivzommer" target="_blank" rel="noopener"><span class="ec-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 10.5V16M8 7.6v.1M12 16v-3.2c0-1.5 1-2.4 2.2-2.4s2 .9 2 2.4V16M12 10.5V16"/></svg></span><span><small>LinkedIn</small>linkedin.com/in/avivzommer</span></a>
+    </div>
+  </section>
+
+</main>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image preview"><button type="button" aria-label="Close preview">✕</button><img id="lb-img" alt=""><p id="lb-cap"></p></div>
+
+<div class="dk-progress" aria-hidden="true"><i id="bar"></i></div>
+<nav class="dk-bar" id="dk-bar" aria-label="Presentation controls">
+  <button type="button" id="prev" aria-label="Previous slide"><svg viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button type="button" class="dk-num" id="count" aria-label="All slides" aria-expanded="false" aria-controls="dk-menu"></button>
+  <button type="button" id="next" aria-label="Next slide"><svg viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <i></i>
+  <button type="button" id="dk-fs" aria-label="Full screen (F)"><svg viewBox="0 0 16 16" fill="none"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</nav>
+<div class="dk-menu" id="dk-menu" hidden></div>
+<div class="dk-hint" id="dk-hint" aria-hidden="true"><kbd>F</kbd> full screen · <kbd>←</kbd><kbd>→</kbd> move · <kbd>M</kbd> all slides</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const bar = document.getElementById('bar'), count = document.getElementById('count'), chapter = document.getElementById('chapter');
+  const frame = document.getElementById('frame'), live = document.getElementById('live');
+  const onFile = location.protocol === 'file:';
+  const base = onFile ? 'http://localhost:5181' : '';
+  let i = Math.max(0, Math.min(slides.length - 1, parseInt(location.hash.slice(1) || '1', 10) - 1));
+
+  function loadLive(src) {
+    frame.classList.remove('offline');
+    live.src = base + src;
+    if (onFile) fetch(base + '/', { mode: 'no-cors' }).catch(() => frame.classList.add('offline'));
+  }
+  document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('on', x === t));
+    loadLive(t.dataset.src);
+  }));
+
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => { s.classList.toggle('on', k === i); s.classList.toggle('prev', k < i); });
+    bar.style.setProperty('--p', (i + 1) / slides.length);
+    count.textContent = (i + 1) + ' / ' + slides.length;
+    document.getElementById('prev').disabled = i === 0; document.getElementById('next').disabled = i === slides.length - 1;
+    renderMenu();
+    chapter.textContent = slides[i].dataset.chapter || '';
+    history.replaceState(null, '', '#' + (i + 1));
+    if (slides[i].hasAttribute('data-live') && !live.src) loadLive(document.querySelector('.tab.on').dataset.src);
+  }
+
+  // Lightbox: click any slide image to see it full screen; Esc or click closes.
+  // Decision 01: switch between the four email types
+  document.querySelectorAll('.mail-tabs .pill').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.mail-tabs .pill').forEach((x) => x.classList.toggle('on', x === b));
+    document.getElementById('mail-img').src = b.dataset.img;
+    document.getElementById('mail-cap').innerHTML = b.dataset.cap;
+  }));
+  const lb = document.getElementById('lightbox'), lbImg = document.getElementById('lb-img'), lbCap = document.getElementById('lb-cap');
+  document.querySelectorAll('.slide img').forEach((img) => img.addEventListener('click', (e) => {
+    e.stopPropagation();
+    lbImg.src = img.src; lbImg.alt = img.alt || '';
+    const col = img.closest('.optcol');
+    const cap =
+      img.closest('.src-row')?.querySelector('span')?.textContent ||
+      (col && img.classList.contains('mine') ? col.querySelector('.opt').firstChild.textContent.trim() + ' · my version' : '') ||
+      img.closest('figure')?.querySelector('figcaption')?.textContent ||
+      img.closest('.ref, .origin')?.querySelector('span:last-of-type, .src')?.textContent ||
+      img.alt || '';
+    lbCap.textContent = cap; lb.classList.add('open');
+  }));
+  const closeLb = () => lb.classList.remove('open');
+  lb.addEventListener('click', closeLb);
+
+  // Slide list (M), full screen (F), idle-hide: same controls as the avivzommer.com decks
+  const menu = document.getElementById('dk-menu');
+  const heading = (s) => { const h = s.querySelector('h1, h2'); if (!h) return ''; const d = document.createElement('div'); d.innerHTML = h.innerHTML.replace(/<br\s*\/?>/g, ' '); return d.textContent.replace(/\s+/g, ' ').trim(); };
+  const titleOf = (s) => { const c = s.dataset.chapter || ''; return c.startsWith('Decision') ? heading(s) : c.replace(/^Research · /, '') || heading(s); };
+  const sectionOf = (s, n) => { const c = s.dataset.chapter || ''; return c.startsWith('Research') ? 'Research' : c.startsWith('Decision') || c === 'The mechanic' ? 'Design' : n < 2 ? 'Intro' : 'Wrap-up'; };
+  function renderMenu() {
+    if (menu.hidden) return;
+    let html = '', sec = null;
+    slides.forEach((s, n) => {
+      const sc = sectionOf(s, n);
+      if (sc !== sec) { sec = sc; if (sc) html += `<h4>${sc}</h4>`; }
+      html += `<button type="button" data-i="${n}" class="${n === i ? 'is-cur' : ''}"><b>${n + 1}</b>${titleOf(s)}</button>`;
+    });
+    menu.innerHTML = html;
+  }
+  function toggleMenu(open) {
+    menu.hidden = !(open ?? menu.hidden);
+    count.setAttribute('aria-expanded', !menu.hidden);
+    renderMenu();
+    if (!menu.hidden) (menu.querySelector('.is-cur') || menu).scrollIntoView({ block: 'center' });
+  }
+  count.addEventListener('click', () => toggleMenu());
+  menu.addEventListener('click', (e) => { const b = e.target.closest('[data-i]'); if (b) { show(+b.dataset.i); toggleMenu(false); } });
+  document.addEventListener('pointerdown', (e) => { if (!menu.hidden && !menu.contains(e.target) && e.target !== count) toggleMenu(false); });
+  const fs = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(() => {});
+  document.getElementById('dk-fs').addEventListener('click', fs);
+
+  document.getElementById('next').onclick = () => show(i + 1);
+  document.getElementById('prev').onclick = () => show(i - 1);
+  document.addEventListener('keydown', (e) => {
+    if (lb.classList.contains('open')) { if (e.key === 'Escape' || e.key === ' ') { e.preventDefault(); closeLb(); } return; }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.target.closest && e.target.closest('iframe, input, textarea')) return;
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); show(i + 1); }
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); show(i - 1); }
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(slides.length - 1);
+    if (e.key === 'f' || e.key === 'F') fs();
+    if (e.key === 'm' || e.key === 'M') toggleMenu();
+    if (e.key === 'Escape' && !menu.hidden) toggleMenu(false);
+  });
+
+  // Controls rest out of sight while presenting
+  let idle;
+  const wake = () => { document.body.classList.remove('is-idle'); clearTimeout(idle); idle = setTimeout(() => { if (menu.hidden) document.body.classList.add('is-idle'); }, 2600); };
+  ['pointermove', 'pointerdown', 'keydown'].forEach((ev) => addEventListener(ev, wake, { passive: true }));
+  wake();
+  setTimeout(() => document.getElementById('dk-hint').classList.add('is-out'), 4200);
+
+  window.addEventListener('hashchange', () => {
+    const n = parseInt(location.hash.slice(1), 10) - 1;
+    if (!Number.isNaN(n) && n !== i) show(n);
+  });
+  show(i);
+</script>
+</body>
+</html>

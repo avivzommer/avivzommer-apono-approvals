@@ -1,0 +1,59 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+:root {
+  --radius: 0.625rem;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Data table overrides (unlayered, so they win over @heroui/styles).
+ * The secondary table variant renders the header as a floating rounded pill
+ * with short rounded column dividers — too soft for a dense ops table.
+ */
+.data-table .table__header {
+  background: transparent;
+}
+
+.data-table .table__column {
+  border-radius: 0;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.data-table .table__column::after {
+  display: none;
+}
+
+.data-table .table__body tr:last-child > td {
+  border-bottom: 0;
+}
+
+/* Screenshot mode (?shot=1): settle overlays instantly. */
+.no-anim *,
+.no-anim *::before,
+.no-anim *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+}
